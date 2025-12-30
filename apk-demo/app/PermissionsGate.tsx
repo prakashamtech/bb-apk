@@ -1,18 +1,23 @@
+// app/PermissionsGate.tsx (updated)
 "use client";
 import { useEffect, useState } from "react";
+import { Capacitor } from '@capacitor/core';
 import { Camera } from "@capacitor/camera";
 import { Geolocation } from "@capacitor/geolocation";
+import { PushNotifications } from "@capacitor/push-notifications";
 import { Filesystem } from "@capacitor/filesystem";
 
 type Step = "idle" | "prompt" | "requesting" | "done" | "denied";
 
 export default function PermissionsGate() {
+  console.log("📱 PermissionsGate rendered");
   const [step, setStep] = useState<Step>("idle");
   const [error, setError] = useState<string>("");
 
   useEffect(() => {
     try {
-      const checked = typeof window !== "undefined" && localStorage.getItem("permChecked");
+      const checked = typeof window !== "undefined" && localStorage.getItem("permChecked2");
+      console.log("📱 PermissionsGate useEffect, permChecked:", checked);
       if (!checked) setStep("prompt");
     } catch (_) {
       // ignore
@@ -22,94 +27,66 @@ export default function PermissionsGate() {
   const markDone = () => {
     try {
       localStorage.setItem("permChecked", "1");
-    } catch (_) {}
+    } catch (_) { }
     setStep("done");
   };
 
   const registerFCMToken = async () => {
-    // Completely isolate FCM registration to prevent app crashes
+    // FCM registration logic (unchanged, enabled)
     try {
       console.log("📱 [SAFE] Starting isolated FCM registration...");
-
-      // Only run in Capacitor environment
+      if (typeof localStorage !== 'undefined' && localStorage.getItem('fcmRegistered')) {
+        console.log("📱 [SAFE] FCM already registered, skipping");
+        return;
+      }
       if (typeof window === 'undefined' || !(window as any).Capacitor) {
         console.log("📱 [SAFE] Not in Capacitor, skipping FCM");
         return;
       }
-
-      // Delay execution to ensure app is fully loaded
       await new Promise(resolve => setTimeout(resolve, 2000));
-
       console.log("📱 [SAFE] Capacitor detected, initializing FCM...");
-
-      // Import and initialize Firebase safely
-      try {
-        const { PushNotifications } = await import("@capacitor/push-notifications");
-        const { getMessaging, getToken } = await import("firebase/messaging");
-        const { VAPID_KEY } = await import("./firebase");
-
-        console.log("📱 [SAFE] Firebase modules loaded");
-
-        // Request permissions
-        const permResult = await PushNotifications.requestPermissions();
-        console.log("📱 [SAFE] Permission result:", permResult);
-
-        if (permResult.receive !== "granted") {
-          console.log("📱 [SAFE] Permission denied, skipping FCM");
-          return;
-        }
-
-        console.log("📱 [SAFE] Permission granted, registering...");
-
-        // Register for notifications
-        await PushNotifications.register();
-        console.log("📱 [SAFE] Push notifications registered");
-
-        // Set up listeners
-        PushNotifications.addListener("registration", async (token) => {
-          try {
-            console.log("📱 ===== CAPACITOR FCM TOKEN =====");
-            console.log("📱 Mobile FCM Token:", token.value);
-
-            // Get Firebase token
-            const messaging = getMessaging();
-            const firebaseToken = await getToken(messaging, {
-              vapidKey: VAPID_KEY
-            });
-
-            if (firebaseToken) {
-              console.log("📱 ===== FIREBASE FCM TOKEN =====");
-              console.log("📱 Firebase FCM Token:", firebaseToken);
-              console.log("📱 ===== TOKENS SUCCESSFULLY OBTAINED =====");
-            } else {
-              console.log("📱 [SAFE] Firebase token was null");
-            }
-          } catch (innerError) {
-            console.error("📱 [SAFE] Error in token processing:", innerError);
-          }
-        });
-
-        PushNotifications.addListener("registrationError", (error) => {
-          console.error("📱 [SAFE] Registration error:", error);
-        });
-
-        console.log("📱 [SAFE] FCM setup completed successfully");
-
-        // Update global FCM status
-        if (typeof window !== 'undefined') {
-          (window as any).updateFcmStatus = (status: string) => {
-            console.log("📱 FCM Status Update:", status);
-          };
-        }
-
-      } catch (importError) {
-        console.error("📱 [SAFE] Error importing Firebase modules:", importError);
-        // Update status on error
-        if (typeof window !== 'undefined') {
-          (window as any).updateFcmStatus?.("❌ FCM Import Failed");
-        }
+      const { PushNotifications } = await import("@capacitor/push-notifications");
+      const { getMessaging, getToken } = await import("firebase/messaging");
+      const { VAPID_KEY } = await import("./firebase");
+      console.log("📱 [SAFE] Firebase modules loaded");
+      const permResult = await PushNotifications.requestPermissions();
+      console.log("📱 [SAFE] Permission result:", permResult);
+      if (permResult.receive !== "granted") {
+        console.log("📱 [SAFE] Permission denied, skipping FCM");
+        return;
       }
-
+      console.log("📱 [SAFE] Permission granted, registering...");
+      await PushNotifications.register();
+      console.log("📱 [SAFE] Push notifications registered");
+      PushNotifications.addListener("registration", async (token) => {
+        try {
+          console.log("📱 ===== CAPACITOR FCM TOKEN =====");
+          console.log("📱 Mobile FCM Token:", token.value);
+          const messaging = getMessaging();
+          const firebaseToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+          if (firebaseToken) {
+            console.log("📱 ===== FIREBASE FCM TOKEN =====");
+            console.log("📱 Firebase FCM Token:", firebaseToken);
+            console.log("📱 ===== TOKENS SUCCESSFULLY OBTAINED =====");
+          } else {
+            console.log("📱 [SAFE] Firebase token was null");
+          }
+        } catch (innerError) {
+          console.error("📱 [SAFE] Error in token processing:", innerError);
+        }
+      });
+      PushNotifications.addListener("registrationError", (error) => {
+        console.error("📱 [SAFE] Registration error:", error);
+      });
+      console.log("📱 [SAFE] FCM setup completed successfully");
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('fcmRegistered', '1');
+      }
+      if (typeof window !== 'undefined') {
+        (window as any).updateFcmStatus = (status: string) => {
+          console.log("📱 FCM Status Update:", status);
+        };
+      }
     } catch (outerError) {
       console.error("📱 [SAFE] FCM registration failed:", outerError);
     }
@@ -119,27 +96,23 @@ export default function PermissionsGate() {
     setError("");
     setStep("requesting");
     try {
-      // Camera
-      try { await Camera.requestPermissions(); } catch (_) {}
-      // Location
-      try { await Geolocation.requestPermissions(); } catch (_) {}
-      // Filesystem/Media (where applicable)
-      try {
-        // Filesystem has requestPermissions on Android; ignore if not supported
-        // @ts-ignore
-        if (Filesystem.requestPermissions) {
-          // @ts-ignore
-          await Filesystem.requestPermissions();
-        }
-      } catch (_) {}
-      // Register FCM token (with delay to prevent startup crashes)
-      setTimeout(async () => {
+      if (Capacitor.isNativePlatform()) {
+        try { await Camera.requestPermissions(); } catch (_) { }
+        try { await Geolocation.requestPermissions(); } catch (_) { }
         try {
-          await registerFCMToken();
-        } catch (error) {
-          console.error("📱 FCM registration failed:", error);
-        }
-      }, 1000);
+          if (Filesystem.requestPermissions) {
+            await Filesystem.requestPermissions();
+          }
+        } catch (_) { }
+        try { await PushNotifications.requestPermissions(); } catch (_) { }  // Requests notification permission
+        setTimeout(async () => {
+          try {
+            await registerFCMToken();  // Initializes FCM after permission
+          } catch (error) {
+            console.error("📱 FCM registration failed:", error);
+          }
+        }, 3000);
+      }
       markDone();
     } catch (e: any) {
       setError(e?.message || "Permission request failed");

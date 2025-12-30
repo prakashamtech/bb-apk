@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "857299892800",
+    "project_id": "best-bazaar-92dd6",
+    "storage_bucket": "best-bazaar-92dd6.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:857299892800:android:1c346a3f9589adb8233da5",
+        "android_client_info": {
+          "package_name": "com.amtech.BestBazaar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2FV2K4f35p8fXeMoYhpKyTdLgCd_XR3Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

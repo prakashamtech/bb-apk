@@ -1,11 +1,11 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.apkdemo.app',
+  appId: 'com.amtech.BestBazaar',
   appName: 'Best Bazaar',
-  webDir: 'out',
+  // webDir: 'out',
   server: {
-    url: 'https://bestbazaar.in',
+    url: 'https://stage.bestbazaar.in',
     cleartext: true,
     androidScheme: 'https'
   },
