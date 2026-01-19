@@ -3,18 +3,18 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.amtech.BestBazaar',
   appName: 'Best Bazaar',
-  // webDir: 'out',
+  webDir: 'out',
   server: {
-    url: 'https://stage.bestbazaar.in',
+    url: 'https://bestbazaar.in',
     cleartext: true,
-    androidScheme: 'https'
+    androidScheme: 'http'
   },
   // Performance optimizations for smooth scrolling
   android: {
     // Enable hardware acceleration
     allowMixedContent: true,
     // Optimize WebView settings
-    webContentsDebuggingEnabled: false, // Set to true for debugging
+    webContentsDebuggingEnabled: true, // Set to true for debugging
   },
   // General performance settings
   plugins: {

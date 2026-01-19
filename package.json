@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "@capacitor/assets": "^3.0.5"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.6.0"
   }
 }

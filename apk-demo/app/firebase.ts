@@ -2,12 +2,12 @@ import { initializeApp } from "firebase/app";
 import { getMessaging } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAQK4ODia_-5-f5xFuqXpO3G0w9UOz4_4o",
+  apiKey: "AIzaSyC2FV2K4f35p8fXeMoYhpKyTdLgCd_XR3Y",
   authDomain: "best-bazaar-92dd6.firebaseapp.com",
   projectId: "best-bazaar-92dd6",
   storageBucket: "best-bazaar-92dd6.firebasestorage.app",
   messagingSenderId: "857299892800",
-  appId: "1:857299892800:web:42ac9a6bc7679862233da5",
+  appId: "1:857299892800:android:1c346a3f9589adb8233da5",
   measurementId: "G-Q1ENCH5R4R"
 };
 const app = initializeApp(firebaseConfig);

@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:857299892800:android:1c346a3f9589adb8233da5",
+        "mobilesdk_app_id": "1:857299892800:android:508ce8d8bb22314f233da5",
         "android_client_info": {
-          "package_name": "com.amtech.BestBazaar"
+          "package_name": "com.amtech.bestbazaar"
         }
       },
       "oauth_client": [],

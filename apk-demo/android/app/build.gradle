@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.amtech.BestBazaar"
+    namespace "com.bestbazaar.app"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.amtech.BestBazaar"
+        applicationId "com.amtech.bestbazaar"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -51,11 +51,14 @@ dependencies {
     implementation project(':capacitor-cordova-android-plugins')
 }
 
+apply plugin: 'com.google.gms.google-services'
+
 apply from: 'capacitor.build.gradle'
 
 try {
     def servicesJSON = file('google-services.json')
     if (servicesJSON.text) {
+        // already applied
         apply plugin: 'com.google.gms.google-services'
     }
 } catch(Exception e) {

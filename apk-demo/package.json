@@ -5,10 +5,12 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "start:prakash": "cross-env PORT=6010 NODE_ENV=development BB_MODE=connected NEXTAUTH_URL=http://localhost:6010 npm-run-all --serial bootstrap --parallel disconnected next:dev start:watch-components",
     "export": "next export",
     "start": "next start"
   },
   "dependencies": {
+    "@capacitor-community/http": "^1.4.1",
     "@capacitor-firebase/messaging": "^7.4.0",
     "@capacitor/app": "^7.1.0",
     "@capacitor/camera": "^7.0.2",
