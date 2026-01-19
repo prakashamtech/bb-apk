@@ -27,6 +27,7 @@ Thumbs.db
 .env
 *.jks
 *.keystore
+serviceAccountKey.json
 
 # Logs
 npm-debug.log*
