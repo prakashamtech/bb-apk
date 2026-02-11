@@ -5,10 +5,11 @@ const config: CapacitorConfig = {
   appName: 'Best Bazaar',
   webDir: 'out',
   server: {
-    url: 'https://bestbazaar.in',
+    url: 'https://stage.bestbazaar.in/',
     cleartext: true,
     androidScheme: 'http'
   },
+
   // Performance optimizations for smooth scrolling
   android: {
     // Enable hardware acceleration
@@ -19,7 +20,12 @@ const config: CapacitorConfig = {
   // General performance settings
   plugins: {
     // Add any performance-related plugin configurations here
-  }
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '766642882419-vspal5vjje9ucun6qkd3p9gmod3np428.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true,
+    },
+  },
 };
 
 export default config;

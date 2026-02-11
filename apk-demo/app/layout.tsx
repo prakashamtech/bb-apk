@@ -1,9 +1,14 @@
+"use client";
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "./scroll-optimization.js";
 import PermissionsGate from "./PermissionsGate";
 import BackButtonHandler from "./BackButtonHandler";
+import { useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,6 +30,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      GoogleAuth.initialize({
+        clientId: "766642882419-cfas08s3pmh8b9r45avavr59t4hm1ilm.apps.googleusercontent.com",
+        scopes: ["profile", "email"],
+        grantOfflineAccess: true,
+      });
+      console.log("GoogleAuth initialized for native platform");
+    }
+  }, []);
+
   return (
     <html lang="en">
       <body

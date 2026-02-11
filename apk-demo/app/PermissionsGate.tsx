@@ -73,7 +73,7 @@ export default function PermissionsGate() {
       console.log("📱 Sending token to server");
       const response = await Http.request({
         method: "POST",
-        url: "https://bestbazaar.in/api/save-fcm-token",
+        url: "https://stage.bestbazaar.in/api/save-fcm-token",
         headers: {
           "Content-Type": "application/json",
         },

@@ -202,7 +202,7 @@ export function usePushNotificationsCapacitor() {
       console.log('[Capacitor Push Hook] Sending token to backend API');
 
       // Register device with API
-      const response = await fetch('https://bestbazaar.in/api/chat/push/subscribe', {
+      const response = await fetch('https://stage.bestbazaar.in/api/chat/push/subscribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -265,7 +265,7 @@ export function usePushNotificationsCapacitor() {
     try {
       // Note: Capacitor doesn't have a direct unsubscribe method like web
       // We just remove the token from our backend
-      const response = await fetch('https://bestbazaar.in/api/chat/push/unsubscribe', {
+      const response = await fetch('https://stage.bestbazaar.in/api/chat/push/unsubscribe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
