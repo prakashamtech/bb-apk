@@ -14,7 +14,7 @@ const config: CapacitorConfig = {
     // Enable hardware acceleration
     allowMixedContent: true,
     // Optimize WebView settings
-    webContentsDebuggingEnabled: false, // Set to true for debugging
+    webContentsDebuggingEnabled: true, // Set to true for debugging
   },
   // General performance settings
   plugins: {
