@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.apkdemo.app',
+  appId: 'com.amtech.bestbazaar',
   appName: 'Best Bazaar',
   webDir: 'out',
   // Load from local dev server for testing
@@ -17,9 +17,11 @@ const config: CapacitorConfig = {
     // Optimize WebView settings
     webContentsDebuggingEnabled: true, // Set to true for debugging
   },
-  // General performance settings
+  // Plugin configurations
   plugins: {
-    // Add any performance-related plugin configurations here
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
+    }
   }
 };
 
