@@ -4,10 +4,11 @@ const config: CapacitorConfig = {
   appId: 'com.apkdemo.app',
   appName: 'Best Bazaar',
   webDir: 'out',
+  // Load from local dev server for testing
   server: {
-    url: 'https://bestbazaar.in',
+    url: 'http://192.168.1.111:3000',
     cleartext: true,
-    androidScheme: 'https'
+    androidScheme: 'http'
   },
   // Performance optimizations for smooth scrolling
   android: {
