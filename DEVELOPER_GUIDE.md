@@ -160,7 +160,7 @@ Controls how Capacitor behaves:
 
 ```typescript
 const config: CapacitorConfig = {
-  appId: 'com.apkdemo.app',        // Android package name
+  appId: 'com.amtech.bestbazaar',        // Android package name
   appName: 'Best Bazaar',          // App display name
   webDir: 'out',                   // Where built files are
   server: {

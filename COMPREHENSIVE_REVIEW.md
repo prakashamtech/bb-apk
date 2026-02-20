@@ -318,7 +318,7 @@ import { App } from '@capacitor/app';
 async function loginWithGoogle() {
   const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
     `client_id=YOUR_CLIENT_ID&` +
-    `redirect_uri=com.apkdemo.app://oauth&` +
+    `redirect_uri=com.amtech.bestbazaar://oauth&` +
     `response_type=code&` +
     `scope=email profile`;
   
@@ -341,7 +341,7 @@ async function loginWithGoogle() {
   <action android:name="android.intent.action.VIEW" />
   <category android:name="android.intent.category.DEFAULT" />
   <category android:name="android.intent.category.BROWSABLE" />
-  <data android:scheme="com.apkdemo.app" android:host="oauth" />
+  <data android:scheme="com.amtech.bestbazaar" android:host="oauth" />
 </intent-filter>
 ```
 
@@ -480,7 +480,7 @@ App Launch → Network Request → Download Website → Display
 ```typescript
 // capacitor.config.ts
 const config: CapacitorConfig = {
-  appId: 'com.apkdemo.app',
+  appId: 'com.amtech.bestbazaar',
   appName: 'Best Bazaar',
   webDir: 'out', // Use static export
   // Remove server.url for offline support

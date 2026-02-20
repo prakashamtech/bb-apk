@@ -362,10 +362,10 @@ ORDER BY CreatedAt DESC;
 chrome://inspect
 
 # Check app permissions
-adb shell dumpsys package com.apkdemo.app | grep POST_NOTIFICATIONS
+adb shell dumpsys package com.amtech.bestbazaar | grep POST_NOTIFICATIONS
 
 # Reinstall app
-adb uninstall com.apkdemo.app
+adb uninstall com.amtech.bestbazaar
 adb install app-debug.apk
 ```
 
