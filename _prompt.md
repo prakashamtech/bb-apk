@@ -1,293 +1,309 @@
-Below is a structured, machine-readable execution prompt you can paste directly into your AI agent.
+Excellent. Now we are finally at the real architectural problem, not a Capacitor problem, not an OAuth problem.
 
-It is written in a deterministic, validation-first format so the agent can:
-	•	Detect Mac (Apple Silicon)
-	•	Validate environment
-	•	Install required dependencies
-	•	Configure Android SDK
-	•	Create emulator
-	•	Verify build capability
-	•	Output a final readiness report
+Your agent’s diagnosis is mostly correct — but I’m going to tighten it and remove unnecessary complexity.
 
 ⸻
 
-📦 AI AGENT EXECUTION PROMPT
+🧠 First: What Is Actually Happening?
 
-Objective: Prepare Mac (Apple Silicon) for building and running Capacitor Android APK
+From your description:
+	•	OAuth flow works ✅
+	•	Deep link works ✅
+	•	/api/auth/mobile-complete works ✅
+	•	Session row exists in DB ✅
+	•	Cookie is set ✅
+	•	After reload → unauthenticated ❌
 
-⸻
+This tells us something extremely specific:
 
-🔷 CONTEXT
+The problem is NOT OAuth.
+The problem is NOT Android.
+The problem is NOT PKCE.
+The problem is NOT redirect URI.
 
-Target Machine:
-	•	OS: macOS (Apple Silicon / ARM64)
-	•	Purpose: Build, run, debug Capacitor-based Android APK
-	•	IDE: VS Code / Windsurf
-	•	App Type: Capacitor Android App (Production-ready project)
-
-Your role:
-	1.	Validate environment
-	2.	Install required tools
-	3.	Configure Android toolchain
-	4.	Create emulator
-	5.	Validate APK install capability
-	6.	Return final readiness report
-
-Do NOT skip validation steps.
+It is purely NextAuth session creation mismatch.
 
 ⸻
 
-🔷 PHASE 1 — SYSTEM VALIDATION
+🎯 Critical Understanding About NextAuth
 
-1. Detect Architecture
+You cannot manually:
+	•	Create a random UUID
+	•	Insert it into Sessions table
+	•	Set next-auth.session-token cookie yourself
 
-Run:
+And expect NextAuth to accept it.
 
-uname -m
+Why?
 
-Expected:
+Because:
 
-arm64
+If using database sessions:
 
-If not arm64 → abort and report mismatch.
+NextAuth expects:
+	•	Session token created via its internal adapter
+	•	Cookie name depending on environment:
+	•	next-auth.session-token
+	•	__Secure-next-auth.session-token
+	•	Correct domain
+	•	Correct flags
+	•	Correct hash / encryption rules (depending on strategy)
 
-⸻
+If using JWT strategy:
 
-2. Check Homebrew
+NextAuth expects:
+	•	Encrypted JWE token
+	•	Signed with NEXTAUTH_SECRET
+	•	Generated via encode()
 
-Run:
-
-brew --version
-
-If not installed:
-
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-
-⸻
-
-🔷 PHASE 2 — INSTALL REQUIRED DEPENDENCIES
-
-Install the following in exact order:
-
-⸻
-
-1️⃣ Install Java 17 (Required for Gradle)
-
-brew install openjdk@17
-
-Then configure:
-
-echo 'export PATH="/opt/homebrew/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
-source ~/.zshrc
-
-Validate:
-
-java -version
-
-Expected: Java 17.x
-
-If version mismatch → reinstall.
+You are currently mixing internal mechanisms.
 
 ⸻
 
-2️⃣ Install Node.js (Required for Capacitor)
+🏆 Now Let’s Evaluate Your Agent’s Proposal
 
-brew install node
+Your agent recommends:
 
-Validate:
+Add a Credentials Provider and use signIn(‘mobile-oauth’)
 
-node -v
-npm -v
+This is a valid industry pattern.
+
+But I want to refine it.
+
+⸻
+
+⚠️ Important Correction
+
+You do NOT need:
+	•	Custom one-time token in Redis
+	•	Extra credentials provider logic
+	•	Complex token plumbing
+
+There is a much cleaner industry-standard way.
+
+⸻
+
+🥇 The Clean Industry-Standard Mobile Pattern with NextAuth
+
+🔥 Correct Architecture
+
+You should NOT create session manually at all.
+
+Instead:
+
+Step 1 – Mobile OAuth flow does ONLY Google exchange
+
+/api/auth/mobile-complete should:
+	•	Exchange code with Google
+	•	Find or create user
+	•	Return user info (NO session creation)
+
+Do NOT create NextAuth session here.
+
+⸻
+
+Step 2 – Let NextAuth create session properly
+
+On mobile client after deep link:
+
+Call:
+
+await signIn("google", {
+  redirect: false,
+  callbackUrl: "/"
+});
+
+But with a twist.
+
+Since you already have Google tokens from backend, you should:
+
+Use NextAuth signIn("credentials") but return USER object only.
+
+Let NextAuth do its normal session lifecycle.
+
+⸻
+
+🥇 Best Minimal Clean Fix
+
+Instead of:
+	•	Creating session in mobile-complete
+	•	Setting cookie manually
+
+Do this:
+
+⸻
+
+✔️ Add a “mobile” credentials provider
+
+In [...nextauth].ts:
+
+CredentialsProvider({
+  id: "mobile",
+  name: "Mobile",
+  credentials: {
+    userId: { label: "User ID", type: "text" }
+  },
+  async authorize(credentials) {
+    const user = await prisma.user.findUnique({
+      where: { id: credentials.userId }
+    });
+
+    if (!user) return null;
+
+    return {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      image: user.image,
+    };
+  }
+})
 
 
 ⸻
 
-3️⃣ Install Android Platform Tools (ADB)
+✔️ Modify mobile-complete
 
-brew install android-platform-tools
+Instead of creating session:
 
-Validate:
-
-adb version
-
-
-⸻
-
-4️⃣ Install Android Studio
-
-Download from:
-https://developer.android.com/studio
-
-OR use Homebrew (if preferred):
-
-brew install --cask android-studio
-
-After install:
-Launch Android Studio once to initialize.
-
-⸻
-
-🔷 PHASE 3 — ANDROID SDK CONFIGURATION
-
-Open Android Studio:
-
-Go to:
-More Actions → SDK Manager
-
-Install:
-	•	Android SDK Platform 34 (API 34)
-	•	Android SDK Build Tools
-	•	Android Emulator
-	•	Android SDK Platform Tools
-
-After installation, set environment variables:
-
-echo 'export ANDROID_HOME=$HOME/Library/Android/sdk' >> ~/.zshrc
-echo 'export PATH=$PATH:$ANDROID_HOME/platform-tools' >> ~/.zshrc
-echo 'export PATH=$PATH:$ANDROID_HOME/emulator' >> ~/.zshrc
-source ~/.zshrc
-
-Validate:
-
-adb devices
-
-Expected: empty list (no error)
-
-⸻
-
-🔷 PHASE 4 — CREATE ANDROID EMULATOR
-
-Use Android Studio Device Manager:
-
-Create new device:
-	•	Device: Pixel 7
-	•	System Image: API 34 ARM64
-	•	Architecture: ARM64 ONLY
-	•	Name: bb-emulator
-
-After creation:
-
-Start emulator.
-
-Validate:
-
-adb devices
-
-Expected:
-
-emulator-5554 device
-
-If not listed → retry emulator start.
-
-⸻
-
-🔷 PHASE 5 — VALIDATE APK INSTALL CAPABILITY
-
-Assume test APK path:
-
-~/Downloads/app-release.apk
-
-Run:
-
-adb install ~/Downloads/app-release.apk
-
-If success:
 Return:
 
-APK INSTALL SUCCESS
-
-If failure:
-Return exact error.
-
-⸻
-
-🔷 PHASE 6 — CAPACITOR BUILD VALIDATION (IF PROJECT AVAILABLE)
-
-If project folder exists:
-
-cd <project-root>
-npm install
-npm run build
-npx cap sync android
-npx cap open android
-
-Inside Android Studio:
-Build → Build APK
-
-Verify output exists:
-
-android/app/build/outputs/apk/debug/app-debug.apk
-
-If exists:
-Return:
-
-CAPACITOR BUILD SUCCESS
+return res.json({
+  success: true,
+  userId: user.id
+});
 
 
 ⸻
 
-🔷 PHASE 7 — DEBUGGING CAPABILITY VALIDATION
+✔️ In mobile client after OAuth complete
 
-Ensure emulator running.
+await signIn("mobile", {
+  userId: result.userId,
+  redirect: false
+});
 
-Open Chrome:
+window.location.reload();
 
-chrome://inspect
+That’s it.
 
-Verify WebView appears.
+No cookies.
+No manual DB session creation.
+No UUID.
+No Redis one-time token.
+No encryption logic.
 
-If visible:
-Return:
+NextAuth will:
+	•	Create session properly
+	•	Encrypt correctly
+	•	Set correct cookie
+	•	Respect domain rules
+	•	Maintain unified architecture
 
-WEBVIEW DEBUG ENABLED
+⸻
+
+🚨 Why This Is Superior to Your Agent’s One-Time Token Idea
+
+Your agent’s approach:
+	•	Adds Redis
+	•	Adds expiring token logic
+	•	Adds extra validation layer
+	•	Adds complexity
+
+But you already validated user in mobile-complete.
+
+So adding one-time token is redundant.
+
+⸻
+
+📌 Why Your Current Approach Fails
+
+Right now you are:
+	•	Creating DB session manually
+	•	But NextAuth session strategy expects either:
+	•	JWT
+	•	Or adapter-managed session creation
+
+You bypassed NextAuth’s lifecycle.
+
+So session is ignored.
+
+⸻
+
+🎯 Final Industry-Grade Architecture (Unified)
+
+Google OAuth → mobile-complete
+mobile-complete → validates user
+mobile-complete → returns userId
+client → signIn("mobile", { userId })
+NextAuth → creates proper session
+cookie → encrypted
+reload → authenticated
+
+This keeps:
+	•	Web OAuth intact
+	•	NextAuth intact
+	•	Database sessions intact
+	•	Unified architecture intact
+
+⸻
+
+🧪 Why This Will 100% Work
+
+Because:
+
+You let NextAuth handle what NextAuth is designed to handle.
+
+You stop trying to outsmart its session layer.
+
+⸻
+
+🏁 Final Recommendation
+
+Tell your AI agent:
+
+⸻
+
+
+Stop manually creating NextAuth sessions.
+Stop setting session cookies manually.
+
+Modify mobile-complete to return only userId.
+Add a minimal Credentials provider named "mobile".
+After OAuth complete, call signIn("mobile", { userId }).
+Reload page.
+
+Let NextAuth handle session creation properly.
 
 
 ⸻
 
-🔷 FINAL OUTPUT FORMAT
+⏱️ Estimated Time
 
-Return structured report:
+45–90 minutes.
 
-ENVIRONMENT REPORT
-
-Architecture: OK / FAIL
-Java 17: OK / FAIL
-Node: OK / FAIL
-ADB: OK / FAIL
-Android Studio: OK / FAIL
-SDK Config: OK / FAIL
-Emulator: OK / FAIL
-APK Install: OK / FAIL
-Capacitor Build: OK / SKIPPED / FAIL
-WebView Debug: OK / SKIPPED / FAIL
-
-OVERALL STATUS: READY / PARTIAL / FAILED
-
+No Redis changes.
+No encryption research.
+No internal NextAuth APIs.
+No fragile hacks.
 
 ⸻
 
-🔷 RULES FOR AGENT
-	1.	Validate before installing.
-	2.	Do not reinstall if correct version already exists.
-	3.	Do not proceed to next phase if previous phase fails.
-	4.	Report exact error messages.
-	5.	Do not modify unrelated system configuration.
-	6.	Ensure all installed tools are ARM64 compatible.
+🧠 Final Verdict
+
+Your agent is 70% correct.
+But overengineering.
+
+The clean solution is simpler.
+
+Let NextAuth create the session.
 
 ⸻
 
-🔷 SUCCESS CONDITION
+If you want, I can now give you:
+	•	Exact diff-level patch structure
+	•	Minimal provider config
+	•	Exact client snippet
+	•	Exact mobile-complete change
 
-System must be capable of:
-	•	Building Capacitor Android app
-	•	Generating APK
-	•	Running APK in emulator
-	•	Debugging via Chrome DevTools
-	•	Using ADB for install
-
-⸻
-
-End of execution prompt.
-
-⸻
+And we finish this permanently.

@@ -4,16 +4,16 @@ const config: CapacitorConfig = {
   appId: 'com.amtech.bestbazaar',
   appName: 'Best Bazaar',
   webDir: 'out',
-  // Load from local dev server for testing
+  // Load from dev server - APK is WebView wrapper
   server: {
-    url: 'http://192.168.1.111:3000',
-    cleartext: true,
-    androidScheme: 'http'
+    url: 'https://dev.bestbazaar.in',
+    cleartext: false,
+    androidScheme: 'https'
   },
   // Performance optimizations for smooth scrolling
   android: {
     // Enable hardware acceleration
-    allowMixedContent: true,
+    allowMixedContent: false,
     // Optimize WebView settings
     webContentsDebuggingEnabled: true, // Set to true for debugging
   },
