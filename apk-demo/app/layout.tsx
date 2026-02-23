@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import BackButtonHandler from "./BackButtonHandler";
 import UnifiedPermissionsGate from "./components/UnifiedPermissionsGate";
-import SessionInterceptorInit from "./SessionInterceptorInit";
 
 // const geistSans = GeistSans({
 //   variable: "--font-geist-sans",
@@ -30,7 +29,6 @@ export default function RootLayout({
       <body
         className={"antialiased"}
       >
-        <SessionInterceptorInit />
         <BackButtonHandler />
         <UnifiedPermissionsGate />
         {children}
