@@ -461,8 +461,11 @@ const Footer = () => {
                                 <span className="text-xs mt-1">Sell</span>
                             </Link>
 
-                            <Link
-                                href="/chat-v2"
+                            <button
+                                onClick={() => {
+                                    // Force full page reload on mobile to ensure cookies are sent
+                                    window.location.href = '/chat-v2';
+                                }}
                                 className="flex flex-col items-center text-gray-700 no-underline hover:no-underline"
                             >
                                 <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -474,10 +477,13 @@ const Footer = () => {
                                     />
                                 </svg>
                                 <span className="text-xs">Chat</span>
-                            </Link>
+                            </button>
 
-                            <Link
-                                href="/profile"
+                            <button
+                                onClick={() => {
+                                    // Force full page reload on mobile to ensure cookies are sent
+                                    window.location.href = '/profile';
+                                }}
                                 className="flex flex-col items-center text-gray-700 no-underline hover:no-underline"
                             >
                                 <svg
@@ -495,7 +501,7 @@ const Footer = () => {
                                     />
                                 </svg>
                                 <span className="text-xs">Account</span>
-                            </Link>
+                            </button>
                         </div>
                     </div>
                 </>

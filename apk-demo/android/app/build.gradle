@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.apkdemo.app"
+    namespace "com.amtech.bestbazaar"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.apkdemo.app"
+        applicationId "com.amtech.bestbazaar"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

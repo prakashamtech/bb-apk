@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
     `);
 
     if (checkResult.recordset[0].count > 0) {
-      console.log("📱 Token already exists, skipping insert");
       return NextResponse.json({ message: "Token already exists" });
     }
 
@@ -46,8 +45,6 @@ export async function POST(request: NextRequest) {
       INSERT INTO fcm_tokens (user_id, device_id, fcm_token, platform, is_active, created_at)
       VALUES (NULL, @deviceId, @fcmToken, @platform, 1, GETDATE())
     `);
-
-    console.log("📱 Token saved to DB successfully");
 
     return NextResponse.json({ message: "Token saved successfully" });
   } catch (error) {

@@ -1,24 +1,28 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.apkdemo.app',
+  appId: 'com.amtech.bestbazaar',
   appName: 'Best Bazaar',
   webDir: 'out',
+  // Load from server - APK is WebView wrapper
+  // Uses environment variable for flexibility across environments
   server: {
-    url: 'https://bestbazaar.in',
-    cleartext: true,
+    url: process.env.NEXT_PUBLIC_API_URL || 'https://dev.bestbazaar.in',
+    cleartext: false,
     androidScheme: 'https'
   },
   // Performance optimizations for smooth scrolling
   android: {
     // Enable hardware acceleration
-    allowMixedContent: true,
+    allowMixedContent: false,
     // Optimize WebView settings
-    webContentsDebuggingEnabled: false, // Set to true for debugging
+    webContentsDebuggingEnabled: true, // Set to true for debugging
   },
-  // General performance settings
+  // Plugin configurations
   plugins: {
-    // Add any performance-related plugin configurations here
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
+    }
   }
 };
 
