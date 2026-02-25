@@ -35,6 +35,24 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Package-based Scheme for Debug Builds (Android OAuth Client) -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.amtech.bestbazaar" />
+            </intent-filter>
+
+            <!-- HTTPS App Links for Release Builds (Production - Enterprise-Grade) -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                      android:host="dev.bestbazaar.in"
+                      android:pathPrefix="/auth/mobile/callback" />
+            </intent-filter>
+
         </activity>
 
         <provider

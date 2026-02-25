@@ -1,24 +1,20 @@
 "use client";
 
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// import { GeistSans } from "geist/font/sans";
 import "./globals.css";
-import "./scroll-optimization.js";
-import PermissionsGate from "./PermissionsGate";
 import BackButtonHandler from "./BackButtonHandler";
-import { useEffect } from "react";
-import { Capacitor } from "@capacitor/core";
-import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
+import UnifiedPermissionsGate from "./components/UnifiedPermissionsGate";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+// const geistSans = GeistSans({
+//   variable: "--font-geist-sans",
+//   subsets: ["latin"],
+// });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+// const geistMono = Geist_Mono({
+//   variable: "--font-geist-mono",
+//   subsets: ["latin"],
+// });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -44,10 +40,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={"antialiased"}
       >
         <BackButtonHandler />
-        <PermissionsGate />
+        <UnifiedPermissionsGate />
         {children}
       </body>
     </html>

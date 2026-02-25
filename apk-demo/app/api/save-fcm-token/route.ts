@@ -39,15 +39,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    console.log('📱 Attempting to save to Firestore');
-    // Save to Firestore
-    await dbInstance.collection('fcmTokens').add({
-      fcmToken,
-      platform,
-      deviceId,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    console.log("📱 Token saved to Firestore successfully");
+    pool = await sql.connect(config);
+
+    // Check if token already exists
+    const checkRequest = new sql.Request();
+    checkRequest.input('fcmToken', sql.VarChar, fcmToken);
+    checkRequest.input('platform', sql.VarChar, platform);
+    const checkResult = await checkRequest.query(`
+      SELECT COUNT(*) as count FROM fcm_tokens
+      WHERE fcm_token = @fcmToken AND platform = @platform
+    `);
+
+    if (checkResult.recordset[0].count > 0) {
+      return NextResponse.json({ message: "Token already exists" });
+    }
+
+    // Insert new token
+    const insertRequest = new sql.Request();
+    insertRequest.input('deviceId', sql.VarChar, deviceId);
+    insertRequest.input('fcmToken', sql.VarChar, fcmToken);
+    insertRequest.input('platform', sql.VarChar, platform);
+    await insertRequest.query(`
+      INSERT INTO fcm_tokens (user_id, device_id, fcm_token, platform, is_active, created_at)
+      VALUES (NULL, @deviceId, @fcmToken, @platform, 1, GETDATE())
+    `);
+
     return NextResponse.json({ message: "Token saved successfully" });
   } catch (error) {
     console.error("📱 Error saving token:", error);
