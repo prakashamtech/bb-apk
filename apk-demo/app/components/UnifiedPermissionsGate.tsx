@@ -13,7 +13,9 @@ export default function UnifiedPermissionsGate() {
       } catch (_) {}
       
       // Redirect to production website immediately
-      window.location.href = 'https://bestbazaar.in';
+      // Uses environment variable for flexibility across environments
+      const productionUrl = process.env.NEXT_PUBLIC_PRODUCTION_URL || 'https://bestbazaar.in';
+      window.location.href = productionUrl;
     }
   }, []);
 

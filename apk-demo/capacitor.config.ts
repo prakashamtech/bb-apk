@@ -4,9 +4,10 @@ const config: CapacitorConfig = {
   appId: 'com.amtech.bestbazaar',
   appName: 'Best Bazaar',
   webDir: 'out',
-  // Load from dev server - APK is WebView wrapper
+  // Load from server - APK is WebView wrapper
+  // Uses environment variable for flexibility across environments
   server: {
-    url: 'https://dev.bestbazaar.in',
+    url: process.env.NEXT_PUBLIC_API_URL || 'https://dev.bestbazaar.in',
     cleartext: false,
     androidScheme: 'https'
   },

@@ -15,10 +15,6 @@
  * These modules only exist in the Capacitor WebView runtime.
  */
 
-import { logger } from '../logger';
-
-const log = logger.scope('MobileOAuth');
-
 /**
  * Get Capacitor Browser module dynamically
  * Only available in Capacitor WebView runtime
@@ -86,13 +82,11 @@ async function sha256(message: string): Promise<ArrayBuffer> {
       const data = encoder.encode(message);
       return await crypto.subtle.digest('SHA-256', data);
     } catch (e) {
-      // Fall through to polyfill
-      console.log('[SHA256] crypto.subtle failed, using polyfill');
+      // Fall through to polyfill silently
     }
   }
 
   // Polyfill for HTTP contexts (Capacitor WebView)
-  console.log('[SHA256] Using SHA-256 polyfill for non-secure context');
   
   function rightRotate(value: number, amount: number): number {
     return (value >>> amount) | (value << (32 - amount));
@@ -210,10 +204,8 @@ function base64UrlEncode(buffer: ArrayBuffer): string {
  * Works in both secure (HTTPS) and non-secure (HTTP) contexts
  */
 async function generateCodeChallenge(verifier: string): Promise<string> {
-  console.log('[generateCodeChallenge] Generating challenge for verifier');
   const hash = await sha256(verifier);
   const challenge = base64UrlEncode(hash);
-  console.log('[generateCodeChallenge] Challenge generated successfully');
   return challenge;
 }
 
@@ -276,7 +268,6 @@ function generateState(provider: OAuthProvider, _secret: string): string {
     const signature = generateRandomString(16);
     return `${encoded}.${signature}`;
   } catch (error) {
-    console.log('[MobileOAuth] JWT signing failed, using fallback state generation');
     // Fallback: simple random state with provider info
     return `${provider}_${Date.now()}_${generateRandomString(32)}`;
   }
@@ -331,44 +322,25 @@ export function clearOAuthFlowData(): void {
  * Returns immediately - callback will be handled via deep link.
  */
 export async function initiateMobileOAuth(provider: OAuthProvider): Promise<void> {
-  console.log('[initiateMobileOAuth] 🚀 Starting OAuth flow for provider:', provider);
-  
   const Capacitor = getCapacitor();
-  console.log('[initiateMobileOAuth] Capacitor check:', !!Capacitor);
   
   if (!Capacitor || !Capacitor.isNativePlatform()) {
-    console.error('[initiateMobileOAuth] ❌ Not on native platform');
     throw new Error('Mobile OAuth can only be used on native platforms');
   }
 
-  console.log('[initiateMobileOAuth] ✅ Native platform confirmed');
-  log.info('Initiating mobile OAuth flow', { provider });
-
   try {
-    // Get OAuth configuration
     const config = getOAuthConfig(provider);
-    console.log('[initiateMobileOAuth] OAuth config:', { 
-      provider, 
-      hasClientId: !!config.clientId,
-      redirectUri: config.redirectUri 
-    });
 
     if (!config.clientId) {
-      console.error('[initiateMobileOAuth] ❌ No client ID configured');
       throw new Error(`OAuth client ID not configured for ${provider}`);
     }
 
-    // Generate PKCE code verifier and challenge
     const codeVerifier = generateRandomString(128);
     const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-    // Generate state parameter for CSRF protection
     const state = generateState(provider, process.env.NEXT_PUBLIC_OAUTH_STATE_SECRET || 'default-secret');
 
-    // Store OAuth flow data for callback handling
     storeOAuthFlowData({ codeVerifier, state, provider });
 
-    // Build authorization URL
     const authUrl = new URL(config.authorizationEndpoint);
     authUrl.searchParams.set('client_id', config.clientId);
     authUrl.searchParams.set('redirect_uri', config.redirectUri);
@@ -380,45 +352,30 @@ export async function initiateMobileOAuth(provider: OAuthProvider): Promise<void
     authUrl.searchParams.set('access_type', 'offline');
     authUrl.searchParams.set('prompt', 'select_account');
 
-    console.log('[initiateMobileOAuth] 🌐 Opening OAuth browser...');
-    console.log('[initiateMobileOAuth] Auth URL:', authUrl.toString());
-    log.info('Opening OAuth browser', { url: authUrl.toString() });
-
-    // Get Browser module dynamically
-    console.log('[initiateMobileOAuth] Getting Browser module...');
     const Browser = await getBrowser();
-    console.log('[initiateMobileOAuth] Browser module available:', !!Browser);
     
     if (!Browser) {
-      const errorMsg = 'Capacitor Browser plugin not available. This is expected in emulator - please test on physical device.';
-      console.error('[initiateMobileOAuth] ❌', errorMsg);
-      log.error(errorMsg);
       clearOAuthFlowData();
-      throw new Error(errorMsg);
+      throw new Error('Capacitor Browser plugin not available');
     }
 
-    console.log('[initiateMobileOAuth] 📱 Calling Browser.open()...');
-    // Open OAuth in Capacitor Browser
     try {
       await Browser.open({
         url: authUrl.toString(),
         presentationStyle: 'popover',
       });
-      console.log('[initiateMobileOAuth] ✅ Browser.open() completed');
-      log.info('OAuth browser opened successfully');
     } catch (browserError: any) {
-      const errorMsg = `Browser.open() failed: ${browserError?.message || 'Unknown error'}. This may not work in emulator - please test on physical device.`;
-      console.error('[initiateMobileOAuth] ❌', errorMsg);
-      log.error(errorMsg, browserError);
       clearOAuthFlowData();
-      throw new Error(errorMsg);
+      // Log critical error for troubleshooting
+      console.error('[OAuth] Browser.open() failed:', browserError?.message || 'Unknown error');
+      throw new Error(`Failed to open OAuth browser: ${browserError?.message || 'Unknown error'}`);
     }
   } catch (error: any) {
-    // Only log if not already logged above
-    if (!error?.message?.includes('Browser plugin') && !error?.message?.includes('Browser.open()')) {
-      log.error('Failed to initiate mobile OAuth', error);
-    }
     clearOAuthFlowData();
+    // Log critical error for troubleshooting
+    if (!error?.message?.includes('Browser')) {
+      console.error('[OAuth] Failed to initiate OAuth:', error?.message || 'Unknown error');
+    }
     throw error;
   }
 }
@@ -442,29 +399,21 @@ export async function exchangeCodeForSession(
     image: string | null;
   };
 }> {
-  log.info('Exchanging authorization code for session');
-
   try {
-    // Retrieve OAuth flow data
     const flowData = getOAuthFlowData();
     if (!flowData) {
       throw new Error('OAuth flow data not found');
     }
 
-    // Validate state parameter matches
     if (flowData.state !== state) {
       throw new Error('State parameter mismatch - possible CSRF attack');
     }
 
-    // Close OAuth browser if still open
     const Browser = await getBrowser();
     if (Browser) {
-      await Browser.close().catch(() => {
-        // Ignore errors if browser already closed
-      });
+      await Browser.close().catch(() => {});
     }
 
-    // Exchange code with backend API
     const response = await fetch('/api/auth/mobile-oauth-exchange', {
       method: 'POST',
       headers: {
@@ -489,9 +438,6 @@ export async function exchangeCodeForSession(
       throw new Error('Invalid response from server');
     }
 
-    log.info('Successfully exchanged code for session', { userId: data.user.id });
-
-    // Clear OAuth flow data
     clearOAuthFlowData();
 
     return {
@@ -499,8 +445,9 @@ export async function exchangeCodeForSession(
       user: data.user,
     };
   } catch (error: any) {
-    log.error('Failed to exchange code for session', error);
     clearOAuthFlowData();
+    // Log critical error for troubleshooting
+    console.error('[OAuth] Failed to exchange code:', error?.message || 'Unknown error');
     throw error;
   }
 }
@@ -513,34 +460,16 @@ export async function exchangeCodeForSession(
 export function setMobileSessionToken(sessionToken: string): void {
   if (typeof window === 'undefined') return;
 
-  log.info('Setting mobile session token');
-
-  // Set session token as cookie
-  // This will be picked up by NextAuth on subsequent requests
-  const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
+  const maxAge = 30 * 24 * 60 * 60;
   const expires = new Date(Date.now() + maxAge * 1000).toUTCString();
-
   document.cookie = `next-auth.session-token=${sessionToken}; path=/; expires=${expires}; SameSite=Lax`;
-
-  log.info('Mobile session token set successfully');
 }
 
 /**
  * Check if running on mobile platform
  */
 export function isMobilePlatform(): boolean {
-  console.log('[isMobilePlatform] Checking platform...');
   const Capacitor = getCapacitor();
-  console.log('[isMobilePlatform] Capacitor available:', !!Capacitor);
-  
-  if (!Capacitor) {
-    console.log('[isMobilePlatform] ❌ Capacitor not found - running in web browser');
-    return false;
-  }
-  
-  const isNative = Capacitor.isNativePlatform();
-  console.log('[isMobilePlatform] isNativePlatform:', isNative);
-  console.log('[isMobilePlatform] Platform:', Capacitor.getPlatform?.());
-  
-  return isNative;
+  if (!Capacitor) return false;
+  return Capacitor.isNativePlatform();
 }
